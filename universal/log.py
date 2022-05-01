@@ -13,12 +13,12 @@ from queue import Queue
 setting_path = r"./data/json/log_setting.json"
 
 
-class Log:
+class ParentLog:
 
     def __init__(self):
 
         self.logLevelList = [
-           "DEBUG", "INFO", "WARNING", "ERROR", "FATAL"
+            "DEBUG", "INFO", "WARNING", "ERROR", "FATAL"
         ]
         self.log_setting = json.load(open(setting_path, "r", encoding="utf-8"))
         self.log_queue = Queue()
@@ -65,36 +65,16 @@ class Log:
             format_string = "%H:%M:%S"
         return time.strftime(format_string)
 
-    def add_log(self, content, level, logger=None, is_print=True, add_period=True):
+    def write_log_daemon(self):
 
         """
-        添加log
-            先添加到队列里面，超过一定数量再写入
-        :param level: log级别  0: DEBUG 1: INFO 2: WARNING 3: ERROR(当前任务可能停止) 4: FATAL: 主线程退出
-        :param content: log内容
-        :param logger: 记录者
-        :param is_print: 是否打印(为False时优先级高于设置)
-        :param is_period: 是否添加句号
+        写入log守护进程
         :return:
         """
-        if logger is None:
-            logger = "DefaultLogger"
-        log = "[%s] %s %s: %s" % (self.logLevelList[level], self.get_formatted_time(), logger.name, content)
-
-        if add_period:
-            log = log + " ."
-        if is_print:
-            print(log)
-        else:
-            if level >= self.log_setting["displayLevel"]:
-                print(log)
-
-        if level > 3:
-            self.write_log()
-            sys.exit()
-        if self.log_queue.qsize() >= self.log_setting["write"]:
-            self.write_log()
-        return
+        while True:
+            time.sleep(5)
+            if self.log_queue.qsize() >= self.log_setting["write"]:
+                self.write_log()
 
     def write_log(self):
 
@@ -115,12 +95,35 @@ class Log:
                 break
 
 
-class Logger:
+class Log:
 
-    def __init__(self, name):
+    def __init__(self, parent, logger):
 
-        self.name = name
+        self.parent = parent
+        self.logger = logger
 
-    def __str__(self):
+    def add_log(self, content, level=1, is_print=True, add_period=True):
 
-        return self.name
+        """
+        添加log
+            先添加到队列里面，超过一定数量再写入
+        :param level: log级别  0: DEBUG 1: INFO 2: WARNING 3: ERROR(当前任务可能停止) 4: FATAL: 主线程退出
+        :param content: log内容
+        :param is_print: 是否打印(为False时优先级高于设置)
+        :param is_period: 是否添加句号
+        :return:
+        """
+        log = "[%s] %s %s: %s" % (self.parent.logLevelList[level], self.parent.get_formatted_time(), self.logger, content)
+
+        if add_period:
+            log = log + " ."
+        if is_print:
+            print(log)
+        else:
+            if level >= self.parent.log_setting["displayLevel"]:
+                print(log)
+
+        if level > 3:
+            self.parent.write_log()
+        return
+
