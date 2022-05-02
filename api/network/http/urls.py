@@ -6,14 +6,14 @@
 from api.local.local_caller import LocalCaller
 
 
-class CommandFinder:
+class Urls:
 
-    def __init__(self, base_abilities, caller, user_type, com_code=None):
+    def __init__(self, ba, user, user_type):
 
-        self.local_caller = LocalCaller(base_abilities, caller, user_type, com_code)
+        self.local_caller = LocalCaller(ba, user, user_type)
 
         self.all_command_list = {
-            "user_login": self.local_caller.user_login,
+            "/user/login": self.local_caller.user_login,
             "user_logout": self.local_caller.user_logout,
             "user_sign_up": self.local_caller.user_sign_up,
             "user_info_update": self.local_caller.user_info_update,
@@ -26,4 +26,8 @@ class CommandFinder:
             "set_apply_job": self.local_caller.set_apply_job,
             "candidate_is_interview_end": self.local_caller.candidate_is_interview_end,
             "candidate_is_interview_started": self.local_caller.candidate_is_interview_started
+        }
+
+        self.get_command_list = {
+            "/user/"
         }

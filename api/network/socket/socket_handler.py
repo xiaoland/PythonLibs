@@ -11,15 +11,16 @@ from database.mongodb import MongoDBManipulator
 
 class SocketHandler:
 
-    def __init__(self, parent_log, addr_object):
+    def __init__(self, ba, addr_object):
 
-        self.parent_log = parent_log
+        self.ba = ba
+        self.parent_log = ba.parent_log
         self.log = Log(self.parent_log, "SocketHandler")
         self.setting = ba.setting
 
         self.addr_object = addr_object
 
-        self.mongodb_manipulator = MongoDBManipulator(self.parent_log, self.setting)
+        self.mongodb_manipulator = MongoDBManipulator(self.ba, self.setting)
 
         self.socket_conn_list = {}
         self.lost_conn_list = {}

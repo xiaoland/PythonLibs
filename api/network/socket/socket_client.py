@@ -13,9 +13,10 @@ from universal.log import Log
 
 class SocketClient:
 
-    def __init__(self):
+    def __init__(self, ba):
 
-        self.parent_log = ParentLog()
+        self.ba = ba
+        self.parent_log = ba.parent_log
         self.log = Log(self.parent_log, "SocketClient")
 
         # self.server_url = self.setting["wsUrl"]

@@ -123,6 +123,8 @@ class Log:
             if level >= self.parent.log_setting["displayLevel"]:
                 print(log)
 
+        self.parent.log_queue.put(log)
+
         if level > 3:
             self.parent.write_log()
         return

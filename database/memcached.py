@@ -1,18 +1,21 @@
 # coding=utf-8
 # author: Lan_zhijiang
 # description: 操作memcached数据库
-# date: 2020/10/2
+# date: 2022/5/2
 
 import memcache
+
+from universal.log import Log
 
 
 class MemcachedManipulator:
 
-    def __init__(self, addr, port):
+    def __init__(self, ba, addr, port):
 
-        self.mc = memcache.Client(
-            [addr+":"+str(port)]
-        )
+        self.ba = ba
+        self.parent_log = ba.parent_log
+        self.log = Log(self.parent_log, "Memcached")
+        self.mc = memcache.Client([addr+":"+str(port)])
 
     def set(self, key, value):
 
@@ -23,11 +26,11 @@ class MemcachedManipulator:
         :return bool
         """
         if type(key) == int or type(key) == str or type(key) == float:
-            print("MemcachedManipulator: Set: key " + str(key) + " value: " + str(value))
+            self.log.add_log("Set: key " + str(key) + " value: " + str(value))
             self.mc.set(key, value)  # Add some exception
             return True
 
-        print("MemcachedManipulator: key can't be a list or dict")
+        self.log.add_log("key can't be a list or dict")
         return False
 
     def add(self, key, value):
@@ -39,16 +42,16 @@ class MemcachedManipulator:
         :return bool
         """
         if type(key) == int or type(key) == str or type(key) == float:
-            print("MemcachedManipulator: Add: key " + str(key) + " value: " + str(value))
+            self.log.add_log("Add: key " + str(key) + " value: " + str(value))
             try:
                 self.mc.add(key, value)
             except self.mc.MemcachedKeyError:
-                print("MemcachedManipulator: Add failed: there is already a key called " + str(key))
+                self.log.add_log("Add failed: there is already a key called " + str(key))
                 return False
             else:
                 return True
 
-        print("MemcachedManipulator: key can't be a list or dict")
+        self.log.add_log("key can't be a list or dict")
         return False
 
     def replace(self, key, value):
@@ -60,11 +63,11 @@ class MemcachedManipulator:
         :return bool
         """
         if type(key) == int or type(key) == str or type(key) == float:
-            print("MemcachedManipulator: Replace: key " + str(key) + " value: " + str(value))
+            self.log.add_log("Replace: key " + str(key) + " value: " + str(value))
             self.mc = self.mc.replace(key, value)
             return True
 
-        print("MemcachedManipulator: key can't be a list or dict")
+        self.log.add_log("key can't be a list or dict")
         return False
 
     def set_multi(self, param):
@@ -75,11 +78,11 @@ class MemcachedManipulator:
         :return bool
         """
         if type(param) == dict:
-            print("MemcachedManipulator: Multi set: key to value: " + str(param))
+            self.log.add_log("Multi set: key to value: " + str(param))
             self.mc.set_multi(param)
             return True
 
-        print("MemcachedManipulator: In set multi, the param must be a dict!")
+        self.log.add_log("In set multi, the param must be a dict!")
         return False
 
     def delete(self, key):
@@ -90,11 +93,11 @@ class MemcachedManipulator:
         :return bool
         """
         if type(key) == int or type(key) == str or type(key) == float:
-            print("MemcachedManipulator: Delete: key: " + str(key))
+            self.log.add_log("Delete: key: " + str(key))
             self.mc.delete(key)
             return True
 
-        print("MemcachedManipulator: key can't be a list or dict")
+        self.log.add_log("key can't be a list or dict")
         return False
 
     def delete_multi(self, param):
@@ -105,11 +108,11 @@ class MemcachedManipulator:
         :return bool
         """
         if type(param) == list or type(param) == tuple:
-            print("MemcachedManipulator: Delete: keys: " + str(param))
+            self.log.add_log("Delete: keys: " + str(param))
             self.mc.delete_multi(param)
             return True
 
-        print("MemcachedManipulator: In delete multi, param must be a list")
+        self.log.add_log("In delete multi, param must be a list")
         return False
 
     def get(self, key):
@@ -120,14 +123,14 @@ class MemcachedManipulator:
         :return any
         """
         if type(key) == int or type(key) == str or type(key) == float:
-            print("MemcachedManipulator: Get: key: " + str(key))
+            self.log.add_log("Get: key: " + str(key))
             try:
                 return self.mc.get(key)
             except self.mc.MemcachedKeyError:
-                print("MemcachedManipulator: key: " + str(key) + "not found!")
+                self.log.add_log("key: " + str(key) + "not found!", 3)
                 return None
 
-        print("MemcachedManipulator: key can't be a list or dict")
+        self.log.add_log("key can't be a list or dict", 1)
         return None
 
     def get_multi(self, param):
@@ -138,10 +141,10 @@ class MemcachedManipulator:
         :return any
         """
         if type(param) == list or type(param) == tuple:
-            print("MemcachedManipulator: Get multi: keys: " + str(param))
+            self.log.add_log("Get multi: keys: " + str(param))
             return self.mc.get_multi(param)
 
-        print("MemcachedManipulator: key can't be a list or dict")
+        self.log.add_log("key can't be a list or dict", 1)
         return None
 
     def increase(self, key):
@@ -151,7 +154,7 @@ class MemcachedManipulator:
         :param key 键
         :return bool
         """
-        print("MemcachedManipulator: Self increase: key: " + str(key))
+        self.log.add_log("Self increase: key: " + str(key))
         self.mc.incr(key)
         return True
 
@@ -162,7 +165,7 @@ class MemcachedManipulator:
         :param key 键
         :return bool
         """
-        print("MemcachedManipulator: Self decrease: key: " + str(key))
+        self.log.add_log("Self decrease: key: " + str(key))
         self.mc.decr(key)
         return True
 
@@ -181,4 +184,3 @@ class MemcachedManipulator:
         :return
         """
         self.mc.disconnect_all()
-
